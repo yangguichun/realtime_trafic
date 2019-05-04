@@ -6,6 +6,7 @@ node_modules
 .env.local
 .env.*.local
 .env
+Pipfile.lock
 
 
 # Log files
@@ -25,3 +26,4 @@ yarn-error.log*
 # python
 .venv
 __pycache__
+Pipfile.lock
