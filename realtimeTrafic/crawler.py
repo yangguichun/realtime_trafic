@@ -1,7 +1,7 @@
 import requests
 from realtimeTrafic.models import DrivePath, Traffic
 from datetime import datetime
-
+import os
 
 # 从百度地图上读取指定路径的路径规划
 def readTrafficFromBaidu(path):
@@ -9,11 +9,12 @@ def readTrafficFromBaidu(path):
     'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
     'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
     }
+    ak = os.getenv('BAIDUMAP_KEY')
     params = {
         'origin': path.origin,
         'destination': path.dest,
         'alternatives': 1,
-        'ak':'OYQbSTxotG4vWIu7Gtzx7GdK3btn1hyB'
+        'ak': ak
     }
 
     try:
