@@ -1,12 +1,12 @@
 <template>
   <div id="app">
     <el-container>
-      <el-header>充电站使用率分析</el-header>
+      <el-header>上下班时间趋势分析</el-header>
       <el-container>
         <el-aside width="15%">
-          <p class='station-title'>电站列表</p>
+          <p class='station-title'>路径列表</p>
           <el-tree
-            :data="stationList"
+            :data="pathList"
             :props="treeProps"
             ref='stationTree'
             node-key="id"
@@ -17,14 +17,6 @@
         </el-aside>
         <el-main>
           <el-row>
-            <el-col :span="8">
-              <el-radio v-model="stationDataType" @change="handleDataTypeChange" label="percent">使用率</el-radio>
-              <el-radio
-                v-model="stationDataType"
-                @change="handleDataTypeChange"
-                label="pilecount"
-              >使用的桩个数</el-radio>
-            </el-col>
             <el-col :span="16">
               <div class="block">
                 <el-button @click="previous" type="primary">前一天</el-button>
@@ -60,13 +52,13 @@ export default {
       chart: null,
       chartOption: null,
       currentDate: new Date(),
-      stationList: [],
+      pathList: [],
       treeProps:{
         label: 'name',
         children: 'children'
       },
       stationDataType: "percent",
-      selStationIdList: [4],
+      selStationIdList: [1],
       pickerOptions1: {
         disabledDate(time) {
           return time.getTime() > Date.now();
@@ -116,16 +108,13 @@ export default {
       this.current();
     },
     initStationList() {
-      this.$http.get("/getstationtree").then(r => {
+      this.$http.get("/getpathtree").then(r => {
         let data = r.body;
-        this.stationList = data.stationList;
+        this.pathList = data.pathList;
       });
     },
     handleStationCheckChange(data, checkedInfo) {
       this.selStationIdList = checkedInfo.checkedKeys
-      this.queryData();
-    },
-    handleDataTypeChange() {
       this.queryData();
     },
     previous() {
@@ -215,10 +204,7 @@ export default {
         beginTime: this.currentDate,
         endTime: endTime
       };
-      let url = "/querystatus_percent";
-      if (this.stationDataType != "percent") {
-        url = "/querystatus_num";
-      }
+      let url = "/querytraffic";
 
       this.$http.post(url, queryParam).then(r => {
         let data = r.body;
@@ -281,7 +267,5 @@ export default {
   margin-top: 60px;
   width: 1800px;
   height: 900px;
-  /* width: 100%;
-  height: 100%; */
 }
 </style>

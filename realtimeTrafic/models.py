@@ -11,12 +11,14 @@ class DrivePath(db.Model):
     origin = db.Column(db.Text)
     # 目标地址的经纬度
     dest = db.Column(db.Text)
+    # 
+    subType = db.Column(db.Text)
     def to_json(self):
         dict = self.__dict__
         return dict
 
 
-class RealTimePath(db.Model):
+class Traffic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     pathId = db.Column(db.Integer)
     queryTime = db.Column(db.DateTime)   

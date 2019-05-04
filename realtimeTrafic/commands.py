@@ -1,47 +1,37 @@
 from realtimeTrafic import app, db
 from realtimeTrafic.models import User, Authority, Role
-from realtimeTrafic.models import DrivePath, RealTimePath
+from realtimeTrafic.models import DrivePath, Traffic
+from realtimeTrafic.crawler import readTrafficFromBaidu
 import click
 import schedule
 from datetime import datetime
+import time
 
 
-def crawlOneStation(station):
-    # click.echo('{} 开始爬电站 {} 数据...'.format(datetime.now(), station.stationName))
-    # stationStatus = None
+def crawlOnePath(path):
+    click.echo('{} 开始抓取路径 {} 数据...'.format(datetime.now(), path.name))
+    rtPath = readTrafficFromBaidu(path)
+    if rtPath is None:
+        return
 
-    # if stationStatus is None:
-    #     return False
-
-    # for item in stationStatus['gunList']:
-    #     db.session.add(item)
-    #     db.session.commit()
-    # db.session.add(stationStatus['status'])
-    # db.session.commit()
-    # click.echo('{} 抓取电站 {} 完成'.format(datetime.now(), station.stationName))
+    db.session.add(rtPath)
+    db.session.commit()
+    click.echo('{} 抓取路径 {} 完成'.format(datetime.now(), path.name))
     return True
 
 
 def do_crawl():
     click.echo('{} ----开始新的一轮----'.format(datetime.now()))
-    # try:
-    #     stationList = ChargeStation.query.all()
-    #     for station in stationList:
-    #         # 如果查询失败了，就重试下
-    #         if not crawlOneStation(station):
-    #             crawlOneStation(station)
+    try:
+        paths = DrivePath.query.all()
+        for path in paths:
+            # 如果查询失败了，就重试下
+            if not crawlOnePath(path):
+                crawlOnePath(path)
   
-    # except Exception as e:
-    #     print('{} 轮询失败，发生异常...'.format(datetime.now()))
-    #     print(str(e))
-
-# @app.cli.command()
-# def xxcdapi():
-#     # stationStatus = readGunStatusListFrom_xxcd(4, '313744932.12886')
-#     stationStatus = readGunStatusListFrom_xxcd(4, 'b25c3f45-1401-42a3-b948-4e0a46610608')
-#     print(stationStatus)
-
-
+    except Exception as e:
+        print('{} 轮询失败，发生异常...'.format(datetime.now()))
+        print(str(e))
 
 @app.cli.command()
 def startcrawl():
@@ -49,6 +39,18 @@ def startcrawl():
     schedule.every(5).minutes.do(do_crawl)
     while True:
         schedule.run_pending()
+        time.sleep(1)
+
+@app.cli.command()
+def testbaidu():
+    yinquan = '22.64558,114.03252'
+    kanghesheng = '22.56815,113.95864'
+    shoumai = '22.54045,113.95185'
+    xiasha = '22.53475,114.03233'
+    path = DrivePath(name='银泉>康和盛', origin = yinquan, dest = kanghesheng)
+    rtPath = readTrafficFromBaidu(path)
+    if rtPath:
+        print(rtPath.to_json())
 
 
 @app.cli.command()

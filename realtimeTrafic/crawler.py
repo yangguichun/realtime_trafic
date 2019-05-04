@@ -1,54 +1,39 @@
 import requests
-from realtimeTrafic.models import ChargeStationStatus, GunStatus
+from realtimeTrafic.models import DrivePath, Traffic
 from datetime import datetime
 
 
-# 从粤易充抓取数据
-def readGunStatusListFrom_yyc(stationId, stationCode):
+# 从百度地图上读取指定路径的路径规划
+def readTrafficFromBaidu(path):
     headers = {
     'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
-    'Referer': 'https://ev.gd.csg.cn/wp/charge.html?stationNo={0}&totalGunNum={1}&notUsedGunNum=9&dcTotalNum={1}&dcNotUsedNum=9'.format(stationCode, totalGunNum)
+    'User-Agent': 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
     }
-    data = {
-        'stationNo': stationCode,
-        'hy_serviceName': 'chargeEquipInfo',
-        'channel':2}
-    cookie = {
-        'Hm_lvt_618d27bb0b9954682270463c1f637561':'1555017354',
-        'JSESSIONID': 'FnQVzbDphcKQkcro_19fvzTkOTV4GkzBu0CmcoKF8JEiMfVrGUwM!-500145939',
-        'Secure': 'true'
+    params = {
+        'origin': path.origin,
+        'destination': path.dest,
+        'alternatives': 1,
+        'ak':'OYQbSTxotG4vWIu7Gtzx7GdK3btn1hyB'
     }
 
     try:
-        r = requests.post('https://ev.gd.csg.cn/serviceInvoke.do', data = data, headers = headers, cookies = cookie, timeout=10)
+        r = requests.get('http://api.map.baidu.com/direction/v2/driving', headers = headers, params = params, timeout=10)
         # print(r.status_code)
         # print(r.json())
-        myObj = r.json()
-        if myObj['code'] != 0:
-            print('接口调用失败, ', myObj['code'], myObj['message'])
+        resp = r.json()
+        if resp['status'] != 0:
+            print('接口调用失败, ', resp['status'], resp['message'])
             return None
-
-        gunList = []
-        # stationStatus = ChargeStationStatus(stationId = stationId, queryTime = datetime.now(), usedGunCount = 0, fixedGunCount = 0, freeGunCount = 0) 
-        # for item in myObj['content']['connectorList']:
-        #     aGun = GunStatus(stationId = stationId, queryTime = datetime.now(), gunName = item['equipmentName'], power = int(item['power']), status = int(item['status']))
-        #     gunList.append(aGun)
-        #     # 只统计快充
-        #     if aGun.power < 20:
-        #         continue
-        #     if aGun.status == 0 or aGun.status == 255:
-        #         stationStatus.fixedGunCount = stationStatus.fixedGunCount + 1
-        #     elif aGun.status == 1:
-        #         stationStatus.freeGunCount = stationStatus.freeGunCount + 1
-        #     else:
-        #         stationStatus.usedGunCount = stationStatus.usedGunCount + 1
-
-        # result = {
-        #     "gunList": gunList,
-        #     "status": stationStatus
-        # }
-        return result
+        
+        # 默认的距离给10万公里
+        rtPath = Traffic(pathId = path.id, queryTime = datetime.now(), distance = 100000000)
+        
+        for route in resp['result']['routes']:
+            dist = float(route['distance'])
+            if rtPath.distance > dist:
+                rtPath.distance = float(route['distance'])
+                rtPath.duration = float(route['duration'])
+        return rtPath
 
     except Exception as e:
         print(str(e))
