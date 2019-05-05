@@ -1,6 +1,8 @@
+# vue.js
 .DS_Store
 node_modules
 dist
+*.map
 
 # local env files
 .env.local
