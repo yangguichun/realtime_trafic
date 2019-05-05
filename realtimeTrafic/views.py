@@ -1,6 +1,6 @@
 from realtimeTrafic import app, db
 from realtimeTrafic.models import DrivePath, Traffic
-from flask import jsonify, request
+from flask import jsonify, request, render_template
 from sqlalchemy import and_
 from datetime import time
 
@@ -11,6 +11,11 @@ def toArray(aDict):
     for item in aList:
         item['children'] = aDict[item['name']]
     return aList
+
+@app.route('/index')
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 
 @app.route('/getpathtree')
